@@ -20,7 +20,7 @@ const dbConfig = {
   port: 3306,
 };
 
-const SALT_ROUND = 10; // 솔팅 라운드 수
+const SALT_ROUND = 10;
 const SECRET_KEY = process.env.JWT_SECRET_KEY;
 const PORT = 4000;
 
