@@ -12,7 +12,6 @@ const { fromEnv } = require("@aws-sdk/credential-providers");
 
 const app = express();
 
-// MySQL 연결 정보
 const dbConfig = {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
