@@ -15,14 +15,14 @@ const app = express();
 // MySQL 연결 정보
 const dbConfig = {
   host: process.env.DB_HOST,
-  user: "admin",
+  user: process.env.DB_USER,
   password: process.env.DB_PW,
-  database: "sparta_db",
+  database: process.env.DB_NAME,
   port: 3306,
 };
 
 const SALT_ROUND = 10; // 솔팅 라운드 수
-const SECRET_KEY = "sparta_secret_key!";
+const SECRET_KEY = process.env.JWT_SECRET_KEY;
 const PORT = 4000;
 
 app.use(express.json());
@@ -62,7 +62,7 @@ const s3 = new S3Client({
 const upload = multer({
   storage: multerS3({
     s3: s3,
-    bucket: "sparta-advance",
+    bucket: process.env.BUCKET_NAME,
     acl: "public-read", // 업로드된 파일의 ACL 설정 (public-read는 모든 사용자에게 읽기 권한을 부여함)
     key: (req, file, cb) => {
       const imageKey = `${file.originalname}/${uuidv4()}.jpg`; // S3에 저장될 파일의 키
