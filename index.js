@@ -223,36 +223,52 @@ app.get("/user", verifyTokenMiddleware, (req, res) => {
 });
 
 app.post(
-  "/upload",
+  "/profile",
   upload.single("avatar"),
   verifyTokenMiddleware,
   (req, res) => {
     try {
+      const { nickname } = req.body;
+      const userId = req.decodedToken.id;
+
+      let updateFields = {};
       if (req.file) {
         const imageUrl = req.file.location;
-        const userId = req.decodedToken.id;
-
-        // users 테이블의 avatar 열을 업데이트하는 SQL 쿼리
-        const updateQuery = "UPDATE users SET avatar = ? WHERE id = ?";
-        connection.query(updateQuery, [imageUrl, userId], (error) => {
-          if (error) {
-            console.error("프로필 이미지 업데이트 중 오류:", error);
-            return res
-              .status(500)
-              .json({ error: "프로필 이미지 업데이트에 실패했습니다." });
-          }
-
-          return res.status(200).json({
-            message: "이미지가 업로드되었습니다.",
-            imageUrl: imageUrl,
-            success: true,
-          });
-        });
-      } else {
-        return res
-          .status(400)
-          .json({ error: "파일이 제대로 업로드되지 않았습니다." });
+        updateFields.avatar = imageUrl;
       }
+
+      if (nickname) {
+        updateFields.nickname = nickname;
+      }
+
+      if (Object.keys(updateFields).length === 0) {
+        return res.status(400).json({ message: "변경 사항이 없습니다." });
+      }
+
+      // Constructing the dynamic SQL query based on the fields to update
+      const updateQuery =
+        "UPDATE users SET " +
+        Object.keys(updateFields)
+          .map((field) => `${field} = ?`)
+          .join(", ") +
+        " WHERE id = ?";
+
+      // Extracting values from the updateFields object and adding userId
+      const updateValues = [...Object.values(updateFields), userId];
+
+      connection.query(updateQuery, updateValues, (error) => {
+        if (error) {
+          console.error("프로필 업데이트 중 오류:", error);
+          return res
+            .status(500)
+            .json({ error: "프로필 업데이트에 실패했습니다." });
+        }
+
+        return res.status(200).json({
+          message: "프로필이 업데이트되었습니다.",
+          success: true,
+        });
+      });
     } catch (error) {
       return res.status(401).send("토큰 검증에 실패했습니다.");
     }
