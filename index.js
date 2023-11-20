@@ -33,7 +33,7 @@ const verifyTokenMiddleware = (req, res, next) => {
   if (!authHeader) {
     return res
       .status(401)
-      .send("헤더에 authorization 정보가 존재하지 않습니다.");
+      .json({ message: "헤더에 authorization 정보가 존재하지 않습니다." });
   }
 
   const [, accessToken] = authHeader.split(" ");
@@ -43,9 +43,9 @@ const verifyTokenMiddleware = (req, res, next) => {
         if (err.name === "TokenExpiredError") {
           return res
             .status(401)
-            .send("토큰이 만료되었습니다. 다시 로그인 해주세요.");
+            .json({ message: "토큰이 만료되었습니다. 다시 로그인 해주세요." });
         }
-        return res.status(401).send("토큰 검증에 실패했습니다.");
+        return res.status(401).json({ message: "토큰 검증에 실패했습니다." });
       }
       req.decodedToken = decodedToken;
     });
@@ -163,12 +163,12 @@ app.post("/login", (req, res) => {
     if (error) {
       return res
         .status(500)
-        .json({ error: "사용자 정보 조회 중 오류가 발생했습니다." });
+        .json({ message: "사용자 정보 조회 중 오류가 발생했습니다." });
     }
 
     // 조회된 사용자 정보가 없으면 존재하지 않는 유저로 처리
     if (results.length === 0) {
-      return res.status(401).json({ error: "존재하지 않는 유저입니다." });
+      return res.status(401).json({ message: "존재하지 않는 유저입니다." });
     }
 
     const user = results[0];
@@ -178,11 +178,13 @@ app.post("/login", (req, res) => {
       if (err) {
         return res
           .status(500)
-          .json({ error: "비밀번호 비교 중 오류가 발생했습니다." });
+          .json({ message: "비밀번호 비교 중 오류가 발생했습니다." });
       }
 
       if (!result) {
-        return res.status(401).json({ error: "비밀번호가 일치하지 않습니다." });
+        return res
+          .status(401)
+          .json({ message: "비밀번호가 일치하지 않습니다." });
       }
 
       // JWT 토큰 생성
@@ -190,7 +192,7 @@ app.post("/login", (req, res) => {
         expiresIn: tokenExpiresIn,
       });
 
-      res.json({ accessToken, success: true });
+      res.status(200).json({ accessToken, success: true });
     });
   });
 });
@@ -203,12 +205,12 @@ app.get("/user", verifyTokenMiddleware, (req, res) => {
     if (error) {
       return res
         .status(500)
-        .json({ error: "사용자 정보 조회 중 오류가 발생했습니다." });
+        .json({ message: "사용자 정보 조회 중 오류가 발생했습니다." });
     }
 
     // 조회된 사용자 정보가 없으면 존재하지 않는 유저로 처리
     if (results.length === 0) {
-      return res.status(401).json({ error: "존재하지 않는 유저입니다." });
+      return res.status(401).json({ message: "존재하지 않는 유저입니다." });
     }
 
     const user = results[0];
@@ -261,7 +263,7 @@ app.post(
           console.error("프로필 업데이트 중 오류:", error);
           return res
             .status(500)
-            .json({ error: "프로필 업데이트에 실패했습니다." });
+            .json({ message: "프로필 업데이트에 실패했습니다." });
         }
 
         return res.status(200).json({
@@ -270,7 +272,7 @@ app.post(
         });
       });
     } catch (error) {
-      return res.status(401).send("토큰 검증에 실패했습니다.");
+      return res.status(401).json({ message: "토큰 검증에 실패했습니다." });
     }
   }
 );
