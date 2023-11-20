@@ -9,8 +9,10 @@ const multerS3 = require("multer-s3");
 const { S3Client } = require("@aws-sdk/client-s3");
 const { v4: uuidv4 } = require("uuid");
 const { fromEnv } = require("@aws-sdk/credential-providers");
+const cors = require("cors");
 
 const app = express();
+app.use(cors());
 
 const dbConfig = {
   host: process.env.DB_HOST,
