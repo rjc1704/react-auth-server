@@ -66,7 +66,14 @@ const upload = multer({
     bucket: process.env.BUCKET_NAME,
     acl: "public-read", // 업로드된 파일의 ACL 설정 (public-read는 모든 사용자에게 읽기 권한을 부여함)
     key: (req, file, cb) => {
-      const imageKey = `${file.originalname}/${uuidv4()}.jpg`; // S3에 저장될 파일의 키
+      const imageKey = `${new Date()
+        .toLocaleDateString("ko", {
+          year: "2-digit",
+          month: "2-digit",
+          day: "2-digit",
+        })
+        .replaceAll(". ", "-")
+        .replace(".", "")}/${uuidv4()}.jpg`; // S3에 저장될 파일의 키
       cb(null, imageKey);
     },
   }),
@@ -192,7 +199,13 @@ app.post("/login", (req, res) => {
         expiresIn: tokenExpiresIn,
       });
 
-      res.status(200).json({ accessToken, userId: id, success: true });
+      res.status(200).json({
+        accessToken,
+        userId: id,
+        success: true,
+        avatar: user.avatar,
+        nickname: user.nickname,
+      });
     });
   });
 });
@@ -267,6 +280,7 @@ app.post(
         }
 
         return res.status(200).json({
+          ...updateFields,
           message: "프로필이 업데이트되었습니다.",
           success: true,
         });
