@@ -192,7 +192,7 @@ app.post("/login", (req, res) => {
         expiresIn: tokenExpiresIn,
       });
 
-      res.status(200).json({ accessToken, success: true });
+      res.status(200).json({ accessToken, userId: id, success: true });
     });
   });
 });
