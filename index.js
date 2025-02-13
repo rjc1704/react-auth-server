@@ -24,7 +24,6 @@ const dbConfig = {
 
 const SALT_ROUND = 10;
 const SECRET_KEY = process.env.JWT_SECRET_KEY;
-const PORT = 4000;
 
 app.use(express.json());
 
@@ -141,7 +140,7 @@ app.post("/register", (req, res) => {
         return res
           .status(201)
           .json({ message: "회원가입 완료", success: true });
-      }
+      },
     );
   });
 });
@@ -211,19 +210,51 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/user", verifyTokenMiddleware, (req, res) => {
-  // MySQL 쿼리를 사용하여 사용자 정보 조회
+  const userId = req.query.user_id;
+
+  if (!userId) {
+    const id = req.decodedToken.id;
+    const query = "SELECT * FROM users WHERE id = ?";
+    connection.query(query, [id], (error, results) => {
+      if (error) {
+        return res
+          .status(500)
+          .json({ message: "사용자 정보 조회 중 오류가 발생했습니다." });
+      }
+
+      if (results.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "요청한 user_id에 해당하는 유저가 없습니다." });
+      }
+
+      const user = results[0];
+
+      return res.status(200).json({
+        id: user.id,
+        nickname: user.nickname,
+        avatar: user.avatar,
+        success: true,
+      });
+    });
+    return;
+  }
+  // if (!userId) {
+  //   return res.status(400).json({ message: "user_id가 필요합니다." });
+  // }
+
   const query = "SELECT * FROM users WHERE id = ?";
-  const id = req.decodedToken.id;
-  connection.query(query, [id], (error, results) => {
+  connection.query(query, [userId], (error, results) => {
     if (error) {
       return res
         .status(500)
         .json({ message: "사용자 정보 조회 중 오류가 발생했습니다." });
     }
 
-    // 조회된 사용자 정보가 없으면 존재하지 않는 유저로 처리
     if (results.length === 0) {
-      return res.status(401).json({ message: "존재하지 않는 유저입니다." });
+      return res
+        .status(404)
+        .json({ message: "요청한 user_id에 해당하는 유저가 없습니다." });
     }
 
     const user = results[0];
@@ -235,9 +266,33 @@ app.get("/user", verifyTokenMiddleware, (req, res) => {
       success: true,
     });
   });
+  // MySQL 쿼리를 사용하여 사용자 정보 조회
+  // const query = "SELECT * FROM users WHERE id = ?";
+  // const id = req.decodedToken.id;
+  // connection.query(query, [id], (error, results) => {
+  //   if (error) {
+  //     return res
+  //       .status(500)
+  //       .json({ message: "사용자 정보 조회 중 오류가 발생했습니다." });
+  //   }
+
+  //   // 조회된 사용자 정보가 없으면 존재하지 않는 유저로 처리
+  //   if (results.length === 0) {
+  //     return res.status(401).json({ message: "존재하지 않는 유저입니다." });
+  //   }
+
+  //   const user = results[0];
+
+  //   return res.status(200).json({
+  //     id: user.id,
+  //     nickname: user.nickname,
+  //     avatar: user.avatar,
+  //     success: true,
+  //   });
+  // });
 });
 
-app.post(
+app.patch(
   "/profile",
   upload.single("avatar"),
   verifyTokenMiddleware,
@@ -288,9 +343,9 @@ app.post(
     } catch (error) {
       return res.status(401).json({ message: "토큰 검증에 실패했습니다." });
     }
-  }
+  },
 );
 
-app.listen(PORT, () => {
-  console.log("Listening on PORT", PORT);
+app.listen(4000, () => {
+  console.log("Listening on PORT", 4000);
 });
